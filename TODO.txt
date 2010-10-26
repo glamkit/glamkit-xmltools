@@ -1,0 +1,69 @@
+TODO in analyse_xml:
+--------------------
+Better guessing of content type (currently shows all possible, not minimum possible types)
+Guessing of type of attribute
+
+
+Plan for harvester:
+-------------------
+./manage.py harvest_xml xmlfile xmlfile harvest.Processor
+Harvests data from xml files using a processor. Processors define CSS selectors and functions to run for an element of XML, or other Processor classes to send parts of XML to. If a function is named save_* then the XML is deleted after it runs.
+
+Options:
+--create-only: only create new objects
+--no-post-harvest: don't post-process afterwards. Instead, this prints a dictionary of models: [changed_ids] that were changed, for future cleaning.
+
+Plan for cleaner:
+-----------------
+./manage.py post_harvest ???
+
+Cleans each record of source data for a particular model - running all functions named 'clean_fieldname' then 'clean_all' - allow these to be parameterised to only do a particular operation (divide clean_all). Allow a list of IDs (that have recently changed).
+
+Options:
+--???
+
+Options to call pdb on failure?
+
+====
+Notes for harvesting:
+
+Watch malcolm's talk
+
+Use --analyse and --sample to get a feel for your XML.
+
+Use stripped down XML files
+
+Use _uncleaned_fieldname for fields that contain data you don't want anyone to use (eg. unresolved/checked refs)
+
+Name list fields with an 's' and singletons in singular.
+
+Outline:
+
+1) Just scrape (all) the data and stash it in your database first, with a field mapping, but a minimum of cleaning or dbref resolution. Clean the fields that can be done in-place (e.g. parsing dates), and generate the fields that trivially depend on items elsewhere in the regord (e.g. slugs) but nothing else yet. Now you've got your data and you never need to sit through long data ingests just to test your data parsing.
+
+Should do:
+* Trivial mapping, cleaning, parsing
+* Generating vital fields
+* Putting data that doesn't need cleaning into the place where it should be
+
+Shouldn't do:
+* generating fields that depend on other records, including DBRefs.
+* denormalisation
+
+Write your harvest to work with a single XML request - ie minimise reliance on headers.
+
+2) Write functions that clean up each model instance. Such as:
+
+* resolving DBrefs (my technique is to put the source info I need into a 'private' record _uncleaned_x_ids)
+* converting character sets
+* denormalisation
+* Greate search index/facets
+
+Cleaning should be idempotent - ie if you run a cleaner twice, it won't change anything.
+
+You can then hook these clean functions to run on item save, which means that they work for atomic updates.
+
+3) Write whole-dataset cleaning
+
+* Do as little of this as possible, or none, since you can't do this on a per-item basis, without writing seperate functions.
+* aggregation, tallying
