@@ -1,9 +1,3 @@
-TODO in analyse_xml:
---------------------
-Better guessing of content type (currently shows all possible, not minimum possible types)
-Guessing of type of attribute
-
-
 Plan for harvester:
 -------------------
 ./manage.py harvest_xml xmlfile xmlfile harvest.Processor

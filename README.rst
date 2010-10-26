@@ -7,29 +7,47 @@ Analysis
 
 Usage examples::
 
-    ./analyse_xml --help   # show help
-    ./analyse_xml -l       # list all xml files to be analysed
-    ./analyse_xml          # analyse all xml files in the current path
-    ./analyse_xml -d path/to/xml    # analyse all xml files in the current path
+    ./analyse_xml --help               # show help
+    ./analyse_xml -l                   # list all xml files to be analysed
+    ./analyse_xml                      # analyse all xml files in the current path
+    ./analyse_xml > analysis.csv       # analyse all xml files in the current path and write the results to a csv file.
+    ./analyse_xml -d path/to/xml       # analyse all xml files in the current path
     ./analyse_xml -d path/to/xml -r    # traverse the current path recursively
     
 The analysis csv contains these fields:
 
-   ``path``          A dot-separated path to each XML tag.
-   ``min_valency``   The minimum number of these elements that each of its parents has
-   ``max_valency``   The maximum number of these elements that each of its parents has
-   ``sample_values`` Sample values of the text within the XML tag.
-   ``attributes``    A list of all the attributes found for each tag.
+=================   ==============================================================
+Column              Description
+=================   ==============================================================
+``path``            A dot-separated path to each XML tag.
+``min_valency``     The minimum number of these elements that each of its parents has
+``max_valency``     The maximum number of these elements that each of its parents has
+``sample_values``   Non-repeating sample values of the text within the XML tag.
+``attributes``      A list of all the attributes found for each tag.
+=================   ==============================================================
+
 
 Interpreting the analysis
 -------------------------
 
+path
+~~~~
+A path that ``looks.like.this`` represents the <this> tag of a file structured like this::
+
+   <looks>
+      <like>
+         <this></this>
+      </like>
+   </looks>
+
 sample_values
 ~~~~~~~~~~~~~
 
-A particularly useful field is sample_values. The number of sample values can be set with the ``-n`` option, but you should keep it more than 5.
+``sample_values`` is a particularly useful field. Apart from seeing the values to discern their likely data type, you can see the variety of values produced.
 
-If you asked for 5 sample values, but only got 1 or 2, that means there are only 2 values in the entire collection, which means that the value is boolean.
+If you asked for 5 sample values, but only got 1 value, that means the value is constant. If you get 2 values, that means there are only 2 values in the entire collection, which means that the value is boolean. If you got 0 values, that means the tag is always empty, or only ever contains children (see the next row of the csv file to see if an element has any children).
+
+The number of sample values can be set with the ``-n`` option to ``analyse_xml``, but you should keep it more than 3 for easily discerning the range of values.
 
 min/max_valency
 ~~~~~~~~~~~~~~~
