@@ -1,4 +1,3 @@
-DO_NOTHING = 0
-DISCARD_AFTER = 1
-WAS_SAVED = 2
-
+DISCARD_AFTER = 1 #None will work too
+DO_NOT_DISCARD = 2
+BREAK = 4
