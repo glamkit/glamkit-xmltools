@@ -30,4 +30,12 @@ class MongoSaver(BaseProcessor):
         d = xml2dict(tag)
         d = self.clean(d)
         
-        m, created = self.model.objects.get_or_create(**d)
+        if d is not None:
+            try:
+                m = self.model.objects.get(id=d['id'])
+                for k, v in d.iteritems():
+                    setattr(m, k, v)
+                m.save()
+            except self.model.DoesNotExist:
+                m = self.model.objects.create(**d)
+                m.save()

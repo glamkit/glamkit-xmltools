@@ -4,10 +4,10 @@ def xml2dict(tag):
     r = {}
     
     #value
+    # tag.text is None, for empty tags.
     if tag.text is not None:
         v = tag.text.strip()
-        if v:
-            r['_value'] = v 
+        r['_value'] = v
     
     #attributes
     if tag.keys():
