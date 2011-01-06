@@ -1,8 +1,10 @@
 from base import BaseProcessor
 from ..lib.xml2dict import xml2dict
 import sys
-
 __all__ = ['MongoSaver',]
+
+
+DEBUG_ON_IMPORT_SAVE_ERROR = True
 
 class MongoSaver(BaseProcessor):
     """
@@ -27,15 +29,24 @@ class MongoSaver(BaseProcessor):
         return d
     
     def __call__(self, tag):
-        d = xml2dict(tag)
-        d = self.clean(d)
+        u = xml2dict(tag)
+        d = self.clean(u)
         
-        if d is not None:
-            try:
-                m = self.model.objects.get(id=d['id'])
-                for k, v in d.iteritems():
-                    setattr(m, k, v)
-                m.save()
-            except self.model.DoesNotExist:
-                m = self.model.objects.create(**d)
-                m.save()
+        try:
+        
+            if d is not None:
+                try:
+                    m = self.model.objects.get(id=d['id'])
+                    for k, v in d.iteritems():
+                        setattr(m, k, v)
+                        m.save()
+                except self.model.DoesNotExist:
+                    m = self.model.objects.create(**d)
+                    m.save()
+        except Exception as e:
+            if DEBUG_ON_IMPORT_SAVE_ERROR:
+                from pprint import pprint
+                print e
+                import pdb; pdb.set_trace()
+            else:
+                raise e
