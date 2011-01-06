@@ -8,8 +8,8 @@ def getfiles(path, regex=r"", recursive=True, followlinks=True):
 
     if os.path.isfile(path):
         path = os.path.abspath(path)
-            if rex.search(path):
-                yield path
+        if rex.search(path):
+            yield path
     else: 
         if recursive:    
             for root, dirs, files in os.walk(path, followlinks):
