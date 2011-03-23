@@ -15,6 +15,7 @@ or, for several XML files:
 from lxml import etree
 from constants import BREAK, DISCARD_AFTER
 import sys
+from files import File
 
 def _fast_iter(context, callable_start, callable_end, *args, **kwargs):
     _iter_count = kwargs.pop('_iter_count', 0)
@@ -37,7 +38,7 @@ def _fast_iter(context, callable_start, callable_end, *args, **kwargs):
     return _iter_count
 
 
-def iter_elems(path_to_xml, callable_start, callable_end, *args, **kwargs):
+def iter_elems(path_to_xml, callable_start, callable_end, encoding=None, file_model=File, *args, **kwargs):
     kwargs['_iter_count'] = kwargs.get('_iter_count', 0)
     sys.stderr.write("processing %s\n" % path_to_xml)
     events = []
@@ -45,11 +46,11 @@ def iter_elems(path_to_xml, callable_start, callable_end, *args, **kwargs):
         events.append('start')
     if callable_end is not None:
         events.append('end')
-    context = etree.iterparse(path_to_xml, events=events)
+    context = etree.iterparse(file_model(path_to_xml), events=events, encoding=encoding)
     return _fast_iter(context, callable_start, callable_end, *args, **kwargs)
 
-def multifile_iter_elems(paths_to_xmls, callable_start, callable_end, *args, **kwargs):
+def multifile_iter_elems(paths_to_xmls, callable_start, callable_end, encoding=None, file_model=File, *args, **kwargs):
     _iter_count = 0
     for path in paths_to_xmls:
         kwargs['_iter_count'] = _iter_count
-        _iter_count = iter_elems(path, callable_start, callable_end, *args, **kwargs)
+        _iter_count = iter_elems(path, callable_start, callable_end, encoding, file_model=file_model, *args, **kwargs)
