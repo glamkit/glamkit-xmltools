@@ -65,10 +65,11 @@ class BaseHandler(object):
                     break
         return x         
     
-    def process(self, files, encoding=None, file_model=File):
-        self.pre_harvest()
-        #this steps through given files, and calls hadle_elem after the end of each element.
-        multifile_iter_elems(files, callable_start=None, callable_end=self.handle_elem, encoding=encoding, file_model=file_model)
+    def process(self, files, post_only=False, encoding=None, file_model=File):
+        if not post_only:
+            self.pre_harvest()
+            #this steps through given files, and calls hadle_elem after the end of each element.
+            multifile_iter_elems(files, callable_start=None, callable_end=self.handle_elem, encoding=encoding, file_model=file_model)
         self.post_harvest()
         
     def pre_harvest(self):
