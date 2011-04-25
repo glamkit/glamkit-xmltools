@@ -38,19 +38,18 @@ def _fast_iter(context, callable_start, callable_end, *args, **kwargs):
     return _iter_count
 
 
-def iter_elems(path_to_xml, callable_start, callable_end, encoding=None, file_model=File, *args, **kwargs):
+def iter_elems(xml_file, callable_start, callable_end, encoding=None, *args, **kwargs):
     kwargs['_iter_count'] = kwargs.get('_iter_count', 0)
-    sys.stderr.write("processing %s\n" % path_to_xml)
     events = []
     if callable_start is not None:
         events.append('start')
     if callable_end is not None:
         events.append('end')
-    context = etree.iterparse(file_model(path_to_xml), events=events, encoding=encoding)
+    context = etree.iterparse(xml_file, events=events, encoding=encoding)
     return _fast_iter(context, callable_start, callable_end, *args, **kwargs)
 
-def multifile_iter_elems(paths_to_xmls, callable_start, callable_end, encoding=None, file_model=File, *args, **kwargs):
+def multifile_iter_elems(xml_files, callable_start, callable_end, encoding=None, *args, **kwargs):
     _iter_count = 0
-    for path in paths_to_xmls:
+    for f in xml_files:
         kwargs['_iter_count'] = _iter_count
-        _iter_count = iter_elems(path, callable_start, callable_end, encoding, file_model=file_model, *args, **kwargs)
+        _iter_count = iter_elems(f, callable_start, callable_end, encoding, *args, **kwargs)
