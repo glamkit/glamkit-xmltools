@@ -67,13 +67,13 @@ class BaseHandler(object):
     
     def process(self, files, post_only=False, encoding=None):
         if not post_only:
-            self.pre_harvest()
+            self.pre_process()
             #this steps through given files, and calls hadle_elem after the end of each element.
             multifile_iter_elems(files, callable_start=None, callable_end=self.handle_elem, encoding=encoding)
-        self.post_harvest()
+        self.post_process()
         
-    def pre_harvest(self):
+    def pre_process(self):
         pass
         
-    def post_harvest(self):
+    def post_process(self):
         pass

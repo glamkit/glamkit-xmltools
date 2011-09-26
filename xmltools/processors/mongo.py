@@ -1,10 +1,9 @@
 from base import BaseProcessor
-from ..lib.xml2dict import xml2dict
-import sys
 __all__ = ['MongoSaver',]
 
-
-DEBUG_ON_IMPORT_SAVE_ERROR = True
+"""
+NOTE! The way this works has significantly diverged from .django.DjangoSaver, and should probably be brought into line.
+"""
 
 class MongoSaver(BaseProcessor):
     """
@@ -19,35 +18,18 @@ class MongoSaver(BaseProcessor):
         self.count = 0
         self.fails = 0
         
-    def clean(self, attribs):
-        return attribs
-    
+    def make_kwargs(self, tag):
+        raise NotImplemented("Define a `make_kwargs` method that takes an XML tag, and returns a kwargs dictionary which can be passed to a model's `create()` call.")
+
     def __call__(self, tag):
-        u = xml2dict(tag)
-        d = self.clean(u)
-                
-        try:
-            if d is not None:
-                # try:
-                #     self.model.objects.get(id=d['id'])
-                # except self.model.DoesNotExist:
-                #     pass
-                m = self.model(**d)
-                m.save()
-                self.count += 1
-                if self.count % 100 == 0:
-                    print "saved %s items" % self.count
-            else: #d is none (fail)
-                self.fails += 1
-                if self.fails % 10 == 0:
-                    print "SKIPPED %s items" % self.fails
-        
-        except Exception as e:
-            if DEBUG_ON_IMPORT_SAVE_ERROR:
-                from pprint import pprint
-                pprint(e)
-                pprint(u)
-                pprint(d)
-                import pdb; pdb.set_trace()
-            else:
-                raise e
+        kwargs = self.make_kwargs(tag)
+
+        if kwargs is not None:
+            m = self.model.objects.create(**kwargs)
+            self.count += 1
+            if self.count % 100 == 0:
+                print "saved %s items" % self.count
+        else: #d is none (fail)
+            self.fails += 1
+            if self.fails % 10 == 0:
+                print "SKIPPED %s items" % self.fails

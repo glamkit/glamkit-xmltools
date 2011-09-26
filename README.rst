@@ -13,7 +13,7 @@ Usage examples::
     ./analyse_xml > analysis.csv       # analyse all xml files in the current path and write the results to a csv file.
     ./analyse_xml -d path/to/xml       # analyse all xml files in the current path
     ./analyse_xml -d path/to/xml -r    # traverse the current path recursively
-    
+
 The analysis csv contains these fields:
 
 =================   ==============================================================
@@ -62,4 +62,85 @@ This field lists out all the attributes found for the tag, and a sample of their
 Harvesting
 ==========
 
-Documentation to come...
+``xmltools`` comes with tools to process large amounts of XML, e.g. to save it to a database quickly, and without taking up more memory than necessary to process a single record.
+
+The principle is to define a ``BaseHandler`` handler that ``__call__``s one of several BaseProcessor subclasses, with the XML to process.
+
+Handlers
+~~~~~~~~
+Which chunks are sent to which Saver is defined by CSS selectors in the handler, like this:
+
+    from xmltools.handler import node, BaseHandler
+    from xml_savers import OrganisationAndPersonSaver, SeriesWorkSaver, TitleWorkSaver, UniformTitleSaver
+    from models import *
+
+    class MyHandler(BaseHandler):
+        namespaces = { 'mv': "http://example.com/uri"}
+
+        handle_nodes = (
+            node('mv|record > mv|Organisation', OrganisationAndPersonSaver(model=Organisation)),
+            node('mv|record > mv|Person', OrganisationAndPersonSaver(model=Person)),
+            node('mv|record > mv|SeriesWork', SeriesWorkSaver(model=SeriesWork)),
+            node('mv|record > mv|TitleWork', TitleWorkSaver(model=TitleWork)),
+        )
+
+        def pre_process(self):
+            # this is called before any xml is processed
+            pass
+
+        def post_process(self):
+            # this is called after all the xml is processed
+            pass
+
+Then initialise the handler and call it with a list of paths to XML files to process.
+
+    from xmltools.lib.getfiles import getfiles
+    paths = getfiles(path=folder_or_file, regex=r"\.xml$", recursive=True)
+    harvester = MyHandler()
+    harvester.process(paths)
+
+Processors
+~~~~~~~~~~
+
+XMLTools comes with a BaseProcessor class, and two subclasses, DjangoSaver and MongoSaver. Subclass these classes to define your own saver. For example:
+
+    from xmltools.processors.django import DjangoSaver
+    from xmltools.lib.xml2dict import xml2dict
+
+class PersonSaver(DjangoSaver):
+    """
+    Person has:
+    firstnames = models.CharField(max_length=255, blank=True)
+    lastname = models.CharField(max_length=255, blank=True)
+    date_of_birth = models.CharField(max_length=255, blank=True)
+    date_of_death = models.CharField(max_length=255, blank=True)
+
+    The incoming tag also has a list of work ids by this person, which were saved earlier.
+    """
+
+    def make_params(self, tag):
+        d = xml2dict(tag)
+        r = {}
+
+        r['id'] = int(d['id'][0]['_value'])
+        r['firstnames'] = d['firstnames'][0]['_value']
+        r['lastname'] = d['lastname'][0]['_value']
+        r['date_of_birth'] = d['pe_sym_dob_year'][0]['_value']
+        r['date_of_death'] = d['pe_sym_dod_year'][0]['_value']
+
+        def postsave(person):
+            for work in d['works']
+                work, created = Work.objects.get_or_create(id=work[0]['_value'])
+                person.works.add(work)
+
+        return {'id': r['id']}, r, postsave
+
+The items in the returned result should be:
+
+1) The query dictionary for a get() lookup to find an existing model instance to update
+2) A dictionary of {field: value, ...} of fields to update for the model instance
+3) A function to be called once the item has been saved, for post-processing.
+
+NB MongoSaver works a bit differently at the moment. See the code.
+
+Or you can subclass BaseProcessor directly to process an XML tag in another way.

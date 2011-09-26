@@ -1,10 +1,6 @@
 from base import BaseProcessor
-from ..lib.xml2dict import xml2dict
-import sys
+
 __all__ = ['DjangoSaver',]
-
-
-DEBUG_ON_IMPORT_SAVE_ERROR = True
 
 class DjangoSaver(BaseProcessor):
     """
@@ -20,38 +16,37 @@ class DjangoSaver(BaseProcessor):
         self.count = 0
         self.fails = 0
         
-    def clean(self, attribs):
-        return attribs
-    
-    def __call__(self, tag):
-        u = xml2dict(tag)
-        d = self.clean(u)
-                
-        try:
-            if d is not None:
-                try: #update (deleting from a RDBMS updates FK)
-                    m = self.model.objects.get(pk=d['id'])
-                    del d['id']
-                    for k,v in d.items():
+    def make_params(self, tag):
+        raise NotImplemented("Define a `make_kwargs` method that takes an XML tag, and returns a kwargs dictionary which can be passed to a model's `create()` call.")
+
+
+    @staticmethod
+    def _update_or_create(model, get_query, update_kwargs):
+        if update_kwargs:
+            if get_query:
+                get_query['defaults'] = update_kwargs
+                m, created = model.objects.get_or_create(**get_query)
+                if not created:
+                    for k,v in update_kwargs.items():
                         setattr(m, k, v)
-                    m.save()             
-                except self.model.DoesNotExist:
-                    m = self.model(**d)
                     m.save()
-                self.count += 1
-                if self.count % 100 == 0:
-                    print "saved %s items" % self.count
-            else: #d is none (fail)
-                self.fails += 1
-                if self.fails % 10 == 0:
-                    print "SKIPPED %s items" % self.fails
-        
-        except Exception as e:
-            if DEBUG_ON_IMPORT_SAVE_ERROR:
-                from pprint import pprint
-                pprint(e)
-                pprint(u)
-                pprint(d)
-                import pdb; pdb.set_trace()
             else:
-                raise e
+                m = model.objects.create(**update_kwargs)
+            return m
+        else:
+            return None
+
+
+    def __call__(self, tag):
+        """
+        update_or_create(
+        """
+        get_query, update_kwargs, callback = self.make_params(tag)
+        m = DjangoSaver._update_or_create(self.model, get_query, update_kwargs)
+
+        if callback:
+            callback(m)
+
+        self.count += 1
+        if self.count % 100 == 0:
+            print "processed %s items" % self.count
