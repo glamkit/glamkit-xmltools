@@ -19,7 +19,7 @@ def main():
 
     (options, args) = parser.parse_args()
 
-    paths = getfiles(path=options.path, regex=r"\.xml$", recursive=options.recursive)
+    paths = getfiles(paths=[options.path], regex=r"\.xml$", recursive=options.recursive)
 
     if options.list_only:
         for p in paths:

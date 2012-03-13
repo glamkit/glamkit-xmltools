@@ -7,9 +7,9 @@ def remove_ns(tag):
 
 def get_path(elem, separator="."):
     an = elem.iterancestors()
-    anlist = [_remove_ns(e.tag) for e in an]
+    anlist = [remove_ns(e.tag) for e in an]
     anlist.reverse()
-    anlist += [_remove_ns(elem.tag)]
+    anlist += [remove_ns(elem.tag)]
 
     return separator.join(anlist)
 

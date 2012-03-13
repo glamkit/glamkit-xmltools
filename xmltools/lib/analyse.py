@@ -2,7 +2,7 @@ from pprint import pprint
 import sys
 import csv
 csv_header=("path", "min_valency", "max_valency","sample_values", "attributes")
-from iterxml import multifile_iter_tags
+from iterxml import multifile_iter_elems
 from utils import remove_ns, get_path
 
 def _get_children_from_analysis(path, analysis):
@@ -68,7 +68,7 @@ def xmlanalyse(files, sample_length=5):
 
     analysis = {}
     
-    multifile_iter_tags(files, analyse_start, analyse_end, sample_length = sample_length, analysis=analysis)
+    multifile_iter_elems(files, analyse_start, analyse_end, sample_length = sample_length, analysis=analysis)
     
     writer = csv.writer(sys.stdout)
     writer.writerow(csv_header)
