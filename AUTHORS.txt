@@ -1,3 +1,0 @@
-glamkit-xmltools Authors:
-
-    * Greg Turner <greg@interaction.net.au>
